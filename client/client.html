@@ -5,7 +5,57 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    const statusStruct = {
+      200: 'Success',
+      400: 'Bad Request',
+      401: 'Unauthorized',
+      403: 'Forbidden',
+      404: 'Not Found',
+      500: 'Internal Server Error',
+      501: 'Not Implemented'
+    }
 
+    const handleResponse = async (response, contentType) => {
+      console.log('handleResponse');
+      const content = document.querySelector('#content');
+      let contentString = '';
+      
+      if(contentType === 'application/json'){
+        const json = await response.json();
+        contentString = json['message'];
+        console.log(json);
+      } else{
+        const xml = await response.text();
+        const parsedXML = new window.DOMParser().parseFromString(xml, 'text/xml');
+        contentString = parsedXML.querySelector('message').textContent;
+        console.log(xml);
+      }
+
+      responseHTML = `
+        <h1>${statusStruct[response.status]}</h1>
+        <p>Message: ${contentString}</p>
+      `;
+      content.innerHTML = responseHTML;
+    };
+
+    const sendFetch = async (url, contentType) => {
+      const response = await fetch(url, {
+        headers: {
+          'Accept': contentType
+        }
+      });
+      handleResponse(response, contentType);
+    };
+
+    const init = () => {
+      const pageSelect = document.querySelector('#page');
+      const typeSelect = document.querySelector('#type');
+      const sendButton = document.querySelector('#send');
+
+      sendButton.addEventListener('click', () => sendFetch(pageSelect.value, typeSelect.value));
+    };
+
+    window.onload = init;
   </script>
 </head>
 <body>
